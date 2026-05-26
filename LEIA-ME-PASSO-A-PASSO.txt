@@ -1,0 +1,65 @@
+COMO COLOCAR O VOZES NO AR — PASSO A PASSO
+
+(Não precisa entender nada de código. É só seguir.)
+
+------------------------------------------------------------
+ANTES DE COMEÇAR
+------------------------------------------------------------
+- Tenha sua chave da Claude guardada (aquela "sk-ant-..." que você criou).
+- Tenha esta pasta "vozes-app" salva no seu computador.
+
+------------------------------------------------------------
+PASSO 1 — Criar conta na Vercel
+------------------------------------------------------------
+1. Abra o site: vercel.com
+2. Clique em "Sign Up" (criar conta).
+3. Pode entrar com seu e-mail (escolha "Continue with Email") ou Google.
+4. Se ela perguntar "Hobby ou Pro", escolha HOBBY (é o grátis).
+
+------------------------------------------------------------
+PASSO 2 — Publicar a pasta (sem GitHub)
+------------------------------------------------------------
+1. Já dentro da Vercel, procure o botão "Add New..." e depois "Project".
+2. Procure a opção de enviar/arrastar pasta. (Na Vercel costuma aparecer
+   uma área escrita "deploy" onde você pode arrastar a pasta do projeto.)
+
+   * Dica: se a Vercel SÓ deixar conectar pelo GitHub e você não tiver,
+     me avise. Existe um jeito ainda mais fácil com um programa chamado
+     "Vercel CLI", e eu te explico. Mas tente o arrastar primeiro.
+
+3. Arraste a pasta "vozes-app" inteira para lá.
+
+------------------------------------------------------------
+PASSO 3 — Colar sua chave (a parte mais importante!)
+------------------------------------------------------------
+Antes de clicar no botão final de publicar ("Deploy"), procure uma
+seção escrita "Environment Variables" (Variáveis de Ambiente).
+
+1. No campo NOME (Name / Key), escreva exatamente:
+   ANTHROPIC_API_KEY
+
+2. No campo VALOR (Value), cole a sua chave (a "sk-ant-...").
+
+3. Clique em "Add" para adicionar.
+
+   >>> É AQUI que a chave fica escondida e segura. Ninguém consegue ver. <<<
+
+------------------------------------------------------------
+PASSO 4 — Publicar
+------------------------------------------------------------
+1. Clique no botão "Deploy".
+2. Espere uns minutinhos (vai aparecer uma animação).
+3. Quando terminar, ela te dá um endereço tipo:
+   vozes-app.vercel.app
+
+------------------------------------------------------------
+PASSO 5 — Testar
+------------------------------------------------------------
+1. Abra o endereço que ela deu.
+2. Clique em "Estoicismo", escreva "estou cansada", clique em Receber.
+3. Se a resposta vier SEM falar de Deus = FUNCIONOU! 🎉
+
+------------------------------------------------------------
+SE DER ALGUM ERRO
+------------------------------------------------------------
+Tira um print e me manda. A gente resolve junto.
