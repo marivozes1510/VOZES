@@ -1,3 +1,7 @@
+// Esta é a "ponte segura". Ela roda no servidor da Vercel, longe dos olhos do
+// público. É AQUI que a chave da Claude fica escondida (a Vercel injeta ela na
+// variável process.env.ANTHROPIC_API_KEY). O navegador do usuário nunca vê a chave.
+
 const VOZES = {
   crista:
 `Você é a voz do Cristianismo. Você acolhe a pessoa a partir da fé cristã: o amor de Deus, a presença de Jesus, a graça, o perdão e a esperança que vem da entrega a Deus. Fale com a serenidade de quem tem fé. Você pode mencionar Deus, Jesus, oração e confiança no Senhor de forma natural e carinhosa, sem citar capítulo e versículo o tempo todo. Não pregue nem julgue: console.`,
@@ -30,8 +34,8 @@ const REGRAS_GERAIS =
 - Escreva UM único parágrafo corrido, sereno, como uma fala que acalma. PROIBIDO usar lista, número, tópico ou asterisco.
 - Tamanho: de 4 a 7 frases. Acolha primeiro o sentimento da pessoa, depois ofereça a sabedoria desta voz.
 - Não devolva o sofrimento em forma de pergunta nem fique interrogando a pessoa.
-- Para sentimentos comuns (cansaço, tristeza, medo, solidão): apenas serenidade e sabedoria, SEM mencionar telefone, emergência ou profissionais.
-- SOMENTE se a pessoa falar claramente em se machucar ou em morrer, então, no mesmo tom sereno, com delicadeza, sugira que ela busque alguém de confiança ou apoio próximo. Fora esse caso, não toque no assunto.
+- Para sentimentos comuns (cansaço, tristeza, medo, solidão, ansiedade, vazio, luto): apenas serenidade e sabedoria, SEM mencionar telefone, emergência, CVV ou profissionais. Não alarme. A imensa maioria das mensagens é assim.
+- CAMADA DE SEGURANÇA (use SOMENTE em crise grave): se — e apenas se — a pessoa sinalizar de forma clara que pode se machucar, tirar a própria vida, sumir, "acabar com tudo" ou que "não aguenta mais viver", então, ainda no seu tom sereno e dentro da sua personalidade, faça três coisas com delicadeza: (1) acolha a dor sem julgar e sem dramatizar; (2) lembre, com carinho, que ela não precisa atravessar isso sozinha e que conversar com alguém de confiança ou um profissional é cuidado, não fraqueza; (3) mencione, de forma calorosa e natural, que o CVV atende no número 188, de graça, 24 horas por dia, com sigilo. Só depois, se couber, ofereça o conforto da sua voz. Nunca substitua o CVV pela espiritualidade nesse caso — eles vêm juntos. Fora de crise grave, NÃO toque nesse assunto.
 - Nunca dê diagnóstico médico ou psicológico.
 - Seja absolutamente fiel à identidade e às PROIBIÇÕES da sua voz descritas acima.`;
 
@@ -39,12 +43,17 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido' });
   }
+
   try {
     const { mensagem, voz } = req.body || {};
+
     if (!mensagem || !mensagem.trim()) {
       return res.status(400).json({ erro: 'Escreva o que você está sentindo.' });
     }
+
+    // Escolhe o prompt da voz. Se a voz não existir, usa o cristianismo como padrão.
     const systemPrompt = (VOZES[voz] || VOZES.crista) + REGRAS_GERAIS;
+
     const resposta = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -59,16 +68,19 @@ export default async function handler(req, res) {
         messages: [{ role: 'user', content: mensagem }]
       })
     });
+
     if (!resposta.ok) {
       const detalhe = await resposta.text();
       return res.status(502).json({ erro: 'A voz não respondeu agora.', detalhe });
     }
+
     const dados = await resposta.json();
     const texto = (dados.content || [])
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('\n')
       .trim();
+
     return res.status(200).json({ texto: texto || '(sem resposta)' });
   } catch (e) {
     return res.status(500).json({ erro: 'Algo deu errado ao chamar a voz.', detalhe: String(e) });
