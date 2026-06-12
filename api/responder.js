@@ -27,7 +27,8 @@ Mantenha-se nesta tradição espírita específica; não fale como uma voz crist
 PROIBIÇÕES ABSOLUTAS: nunca cite Deus, Jesus, Cristo, cruz, fé religiosa, graça divina, providência divina, espíritos ou qualquer doutrina ou religião. Sua força vem da experiência de vida vivida e superada, não da fé. Você é a própria pessoa amadurecida, não um ser espiritual.`
 };
 
-const REGRAS_GERAIS =
+// Regras para o modo CONVERSA (a tela principal do app, quando a pessoa escreve uma dor)
+const REGRAS_CONVERSA =
 `\n\nREGRAS GERAIS DE COMO RESPONDER:
 - Responda em português do Brasil.
 - Fale diretamente com a pessoa usando "você", SEM apelidos carinhosos (não use "minha filha", "querido", "meu bem", etc.).
@@ -39,20 +40,55 @@ const REGRAS_GERAIS =
 - Nunca dê diagnóstico médico ou psicológico.
 - Seja absolutamente fiel à identidade e às PROIBIÇÕES da sua voz descritas acima.`;
 
+// Regras para o modo RECADO (a página de "Recado de hoje")
+const MOMENTOS_DESC = {
+  manha: 'o início de um novo dia — uma mensagem que prepara o coração da pessoa para o que vem pela frente, com esperança e disposição',
+  tarde: 'o meio do dia — uma mensagem que dá um respiro, recoloca o eixo, lembra do que importa quando o dia já cansou um pouco',
+  noite: 'o fim do dia, hora de descansar — uma mensagem que aquieta o coração, agradece, solta o peso, prepara pro sono'
+};
+
+function regrasRecado(momento){
+  const descMomento = MOMENTOS_DESC[momento] || MOMENTOS_DESC.manha;
+  return `\n\nVOCÊ ESTÁ NO MODO "RECADO DE HOJE".
+A pessoa não escreveu uma dor específica — ela só veio buscar um pequeno sopro de acolhimento desta voz para ${descMomento}.
+
+REGRAS DESTE RECADO:
+- Responda em português do Brasil.
+- Fale diretamente com a pessoa usando "você", SEM apelidos carinhosos.
+- Escreva UM único parágrafo curto, de 3 a 5 linhas (umas 40 a 60 palavras no total). PROIBIDO usar lista, número, tópico, asterisco ou título.
+- Tom: calmo, gentil, como um carinho discreto. Não pergunte nada. Não interrogue. Apenas ofereça.
+- Seja FIEL à sabedoria e às PROIBIÇÕES da sua voz descritas acima — é isso que diferencia este recado dos outros.
+- Não mencione CVV, telefone, profissional, emergência. Este é um recado de acolhimento simples para um momento comum do dia.
+- Nunca repita o mesmo recado — varie a abertura, as imagens, as palavras. Surpreenda com leveza.
+- Não comece com "querido(a)", "olá", "bom dia". Vá direto na essência do recado.`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido' });
   }
 
   try {
-    const { mensagem, voz } = req.body || {};
-
-    if (!mensagem || !mensagem.trim()) {
-      return res.status(400).json({ erro: 'Escreva o que você está sentindo.' });
-    }
+    const { mensagem, voz, modo, momento } = req.body || {};
 
     // Escolhe o prompt da voz. Se a voz não existir, usa o cristianismo como padrão.
-    const systemPrompt = (VOZES[voz] || VOZES.crista) + REGRAS_GERAIS;
+    const promptVoz = VOZES[voz] || VOZES.crista;
+
+    let systemPrompt;
+    let userMessage;
+
+    if (modo === 'recado') {
+      // Modo recado: não precisa de mensagem da pessoa, gera direto baseado no momento do dia
+      systemPrompt = promptVoz + regrasRecado(momento);
+      userMessage = `Por favor, me dê o recado desta voz para esse momento do dia.`;
+    } else {
+      // Modo padrão (conversa): precisa da mensagem da pessoa
+      if (!mensagem || !mensagem.trim()) {
+        return res.status(400).json({ erro: 'Escreva o que você está sentindo.' });
+      }
+      systemPrompt = promptVoz + REGRAS_CONVERSA;
+      userMessage = mensagem;
+    }
 
     const resposta = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -65,7 +101,7 @@ export default async function handler(req, res) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: mensagem }]
+        messages: [{ role: 'user', content: userMessage }]
       })
     });
 
