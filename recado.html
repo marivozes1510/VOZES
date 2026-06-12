@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recado de hoje · Vozes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
+
+  :root{
+    --bg:#0f0d14;
+    --bg2:#17131f;
+    --gold:#d9b673;
+    --gold-soft:#b89a5e;
+    --text:#ece6dd;
+    --text-dim:#9a9088;
+    --card:#1c1825;
+    --card-hover:#241f30;
+    --line:#2e2738;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(circle at 50% 0%, #1d1726 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Jost',sans-serif;
+    min-height:100vh;
+    padding:30px 20px 80px;
+    line-height:1.6;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+  .back{
+    display:inline-block;
+    color:var(--text-dim);
+    text-decoration:none;
+    font-size:14px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:24px;
+    transition:color .2s;
+  }
+  .back:hover{color:var(--gold)}
+  header{text-align:center;margin-bottom:40px}
+  .title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:42px;
+    font-weight:500;
+    letter-spacing:1px;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  .sub{
+    font-size:14px;
+    color:var(--text-dim);
+    letter-spacing:3px;
+    text-transform:uppercase;
+    font-weight:300;
+  }
+  .step-label{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;
+    font-size:22px;
+    color:var(--gold-soft);
+    margin:0 0 18px 4px;
+  }
+  .voices{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:12px;
+    margin-bottom:36px;
+  }
+  .voice, .moment{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 16px;
+    cursor:pointer;
+    transition:all .25s ease;
+    text-align:center;
+  }
+  .voice:hover, .moment:hover{background:var(--card-hover);transform:translateY(-2px)}
+  .voice.active, .moment.active{
+    border-color:var(--gold);
+    background:var(--card-hover);
+    box-shadow:0 0 0 1px var(--gold), 0 8px 30px rgba(217,182,115,.12);
+  }
+  .voice .icon, .moment .icon{font-size:28px;display:block;margin-bottom:8px}
+  .voice .name, .moment .name{
+    font-family:'Cormorant Garamond',serif;
+    font-size:20px;
+    color:var(--text);
+    font-weight:500;
+  }
+  .moments{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:36px;
+  }
+  .btn{
+    width:100%;
+    background:linear-gradient(180deg,var(--gold) 0%,var(--gold-soft) 100%);
+    color:#1a1510;
+    border:none;
+    border-radius:14px;
+    font-family:'Jost',sans-serif;
+    font-size:16px;
+    font-weight:500;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    padding:17px;
+    cursor:pointer;
+    transition:opacity .2s,transform .1s;
+  }
+  .btn:hover{opacity:.92}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.secondary{
+    background:transparent;
+    color:var(--gold);
+    border:1px solid var(--gold-soft);
+    margin-top:14px;
+  }
+  .answer{
+    margin-top:36px;
+    background:linear-gradient(180deg,var(--bg2),#13101a);
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:14px;
+    padding:30px 32px;
+    font-family:'Cormorant Garamond',serif;
+    font-size:23px;
+    line-height:1.65;
+    color:#f2ece1;
+    white-space:pre-wrap;
+    display:none;
+    animation:fade .8s ease;
+  }
+  .answer.show{display:block}
+  .answer .who{
+    display:block;
+    font-family:'Jost',sans-serif;
+    font-size:13px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin-bottom:16px;
+  }
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .loading{
+    text-align:center;
+    color:var(--text-dim);
+    font-style:italic;
+    font-family:'Cormorant Garamond',serif;
+    font-size:20px;
+    margin-top:36px;
+    display:none;
+  }
+  .loading.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="back">← voltar</a>
+
+  <header>
+    <div class="title">Recado de hoje</div>
+    <div class="sub">um sopro pra esse momento</div>
+  </header>
+
+  <div class="step-label">Escolha uma voz</div>
+  <div class="voices" id="voices"></div>
+
+  <div class="step-label">Para qual momento?</div>
+  <div class="moments" id="moments"></div>
+
+  <button class="btn" id="send">Receber recado</button>
+
+  <div class="loading" id="loading">a voz está se aproximando...</div>
+  <div class="answer" id="answer"></div>
+  <button class="btn secondary" id="again" style="display:none">Outro recado</button>
+</div>
+
+<script>
+const VOICES = [
+  {id:"crista",        name:"Cristianismo",       icon:"🕊️"},
+  {id:"estoicismo",    name:"Estoicismo",         icon:"🏛️"},
+  {id:"budismo",       name:"Budismo",            icon:"🌿"},
+  {id:"guardiao",      name:"Guardião",           icon:"✨"},
+  {id:"espiritismo",   name:"Espiritismo",        icon:"🙏"},
+  {id:"seuEuDoFuturo", name:"Seu Eu do Futuro",   icon:"⏳"},
+];
+
+const MOMENTS = [
+  {id:"manha", name:"Manhã", icon:"🌅"},
+  {id:"tarde", name:"Tarde", icon:"☀️"},
+  {id:"noite", name:"Noite", icon:"🌙"},
+];
+
+let selectedVoice = null;
+let selectedMoment = null;
+
+const voicesEl = document.getElementById('voices');
+VOICES.forEach(v=>{
+  const d=document.createElement('div');
+  d.className='voice';
+  d.innerHTML=`<span class="icon">${v.icon}</span><span class="name">${v.name}</span>`;
+  d.onclick=()=>{
+    document.querySelectorAll('.voice').forEach(x=>x.classList.remove('active'));
+    d.classList.add('active');
+    selectedVoice=v;
+  };
+  voicesEl.appendChild(d);
+});
+
+const momentsEl = document.getElementById('moments');
+MOMENTS.forEach(m=>{
+  const d=document.createElement('div');
+  d.className='moment';
+  d.innerHTML=`<span class="icon">${m.icon}</span><span class="name">${m.name}</span>`;
+  d.onclick=()=>{
+    document.querySelectorAll('.moment').forEach(x=>x.classList.remove('active'));
+    d.classList.add('active');
+    selectedMoment=m;
+  };
+  momentsEl.appendChild(d);
+});
+
+const btn=document.getElementById('send');
+const again=document.getElementById('again');
+const loading=document.getElementById('loading');
+const answer=document.getElementById('answer');
+
+async function gerarRecado(){
+  if(!selectedVoice){alert('Escolha uma voz primeiro 🙏');return;}
+  if(!selectedMoment){alert('Escolha um momento (manhã, tarde ou noite).');return;}
+
+  answer.classList.remove('show');
+  again.style.display='none';
+  loading.classList.add('show');
+  btn.disabled=true;
+
+  try{
+    const res = await fetch('/api/responder', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        modo:'recado',
+        voz: selectedVoice.id,
+        momento: selectedMoment.id,
+        mensagem: `Recado de ${selectedMoment.name.toLowerCase()}`
+      })
+    });
+    const data = await res.json();
+    loading.classList.remove('show');
+    const texto = data.texto || data.erro || '(sem resposta)';
+    answer.innerHTML = `<span class="who">${selectedVoice.icon} ${selectedVoice.name} · ${selectedMoment.icon} ${selectedMoment.name}</span>` + texto;
+    answer.classList.add('show');
+    again.style.display='block';
+  }catch(e){
+    loading.classList.remove('show');
+    answer.innerHTML = `<span class="who">erro</span>Algo deu errado. Tente de novo.`;
+    answer.classList.add('show');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+btn.onclick = gerarRecado;
+again.onclick = gerarRecado;
+</script>
+</body>
+</html>
